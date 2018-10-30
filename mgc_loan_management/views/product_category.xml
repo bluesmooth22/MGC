@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Inherit Form View to Modify it -->
+        <record id="brdc_product_category_form_view" model="ir.ui.view">
+            <field name="name">product category</field>
+            <field name="model">product.category</field>
+            <field name="inherit_id" ref="product.product_category_form_view"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='name']" position="after">
+                    <br/>
+                    <field name="parent_category"/>
+                    <label for="parent_category" string="Is Parent"/>
+                </xpath>
+
+                <xpath expr="//group[@name='first']" position="attributes">
+                    <attribute name="attrs">{'invisible':[('parent_category', '=', True)]}</attribute>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

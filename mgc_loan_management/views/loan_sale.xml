@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+
+		<record id="loan_sale_form_view" model="ir.ui.view">
+			<field name="name">Loan Sales</field>
+			<field name="model">installment.sale</field>
+            <field name="arch" type="xml">
+            	<form string="">
+					<header>
+					    <field name="state" widget="statusbar"/>
+					</header>
+					<sheet>
+						<div class="oe_title">
+							<label for="name" class="oe_edit_only"/>
+							<h1>
+								<field name="name" placeholder="......"/>
+							</h1>
+						</div>
+						<group>
+							<group>
+								<field name="partner_id" options='{"no_open": True, "no_create_edit": 1}'/>
+								<field name="product_type" invisible="1"/>
+								<field name="product_category_id" options='{"no_open": True, "no_create_edit": 1}'/>
+								<field name="purchase_type"/>
+								<field name="purchase_term" options='{"no_open": True, "no_create_edit": 1}'/>
+							</group>
+
+							<group>
+								<field name="order_date"/>
+								<field name="pricelist_id" options='{"no_open": True, "no_create_edit": 1}'/>
+							</group>
+						</group>
+						<notebook>
+							<page string="Order Line">
+								<group>
+									<table style="width:100%; table-layout: auto;" cellpadding="2px">
+										<tr style="background-color:#337AB7; color:#ffff;">
+											<td>Product</td>
+											<td>Lot/Vault</td>
+											<td>Unit Price</td>
+											<td>Discount (%)</td>
+											<td>Subtotal</td>
+										</tr>
+										<tr>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="product_id" options='{"no_open": True, "no_create_edit": 1}'/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="lot_id" options='{"no_open": True, "no_create_edit": 1}'/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_unit"/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="discount"/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_subtotal"/></td>
+										</tr>
+									</table>
+								</group>
+								<hr/>
+								<group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total">
+									<field name="amount_untaxed" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+									<field name="amount_tax" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+									<div class="oe_subtotal_footer_separator oe_inline o_td_label">
+										<label for="amount_total" />
+										<button name="button_dummy"
+											states="draft" string="(update)" type="object" class="oe_edit_only oe_link"/>
+									</div>
+									<field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+								</group>
+								<div class="oe_clear"/>
+							</page>
+							<page string="Other Information">
+								<group>
+									<field name="user_id" string="Salesperson"/>
+								</group>
+							</page>
+						</notebook>
+					</sheet>
+            	</form>
+            </field>
+		</record>
+
+		<record id="product_installment_sales_action_view" model="ir.actions.act_window">
+		    <field name="name">Product Sales</field>
+		    <field name="type">ir.actions.act_window</field>
+		    <field name="res_model">installment.sale</field>
+		    <field name="view_mode">tree,form</field>
+			<field name="context">{'default_product_type': 'product'}</field>
+			<field name="domain">[('product_type', '=', 'product')]</field>
+		</record>
+		<record id="service_installment_sales_action_view" model="ir.actions.act_window">
+		    <field name="name">Services</field>
+		    <field name="type">ir.actions.act_window</field>
+		    <field name="res_model">installment.sale</field>
+		    <field name="view_mode">tree,form</field>
+			<field name="context">{'default_product_type': 'service'}</field>
+			<field name="domain">[('product_type', '=', 'service')]</field>
+		</record>
+		<record id="plan_installment_sales_action_view" model="ir.actions.act_window">
+		    <field name="name">Plans</field>
+		    <field name="type">ir.actions.act_window</field>
+		    <field name="res_model">installment.sale</field>
+		    <field name="view_mode">tree,form</field>
+			<field name="context">{'default_product_type': 'plan'}</field>
+			<field name="domain">[('product_type', '=', 'plan')]</field>
+		</record>
+
+		<!-- This Menu Item will appear in the Upper bar, That's why It needs NO parent or action -->
+		<menuitem id="BRDC_ROOT_MENU" name="BRDC" sequence=""/>
+		<!-- This Menu Item Must have a parent -->
+		<menuitem id="BRDC_SALES_CATEGORY" name="Sales" parent="BRDC_ROOT_MENU" sequence="0"/>
+		<menuitem id="BRDC_CONFIG_CATEGORY" name="Configuration" parent="BRDC_ROOT_MENU" sequence="100"/>
+		<!-- This Menu Item must have a parent and an action -->
+		<menuitem id="BRDC_CUSTOMER_MENU" name="Customers"
+            parent="BRDC_SALES_CATEGORY"
+            action="base.action_partner_customer_form" sequence="0"/>
+		<menuitem id="PRODUCT_INSTALLMENT_SALES_MENU" name="Buy Product" parent="BRDC_SALES_CATEGORY" action="product_installment_sales_action_view" sequence=""/>
+		<menuitem id="SERVICE_INSTALLMENT_SALES_MENU" name="BUY Service" parent="BRDC_SALES_CATEGORY" action="service_installment_sales_action_view" sequence=""/>
+		<menuitem id="PLAN_INSTALLMENT_SALES_MENU" name="Plan Application" parent="BRDC_SALES_CATEGORY" action="plan_installment_sales_action_view" sequence=""/>
+
+
+
+	</data>
+</odoo>

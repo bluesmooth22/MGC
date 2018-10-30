@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="deferred_term_form_view" model="ir.ui.view">
+            <field name="name">Deferred Term</field>
+            <field name="model">loan.deferred.term</field>
+            <field name="arch" type="xml">
+                <form string="">
+                    <sheet>
+                        <div class="oe_title">
+                            <label for="name" class="oe_edit_only"/>
+                            <h1>
+                                <field name="name" placeholder="......"/>
+                            </h1>
+                            <group>
+                                <field name="months"/>
+                            </group>
+                            <br/>
+                            <field name="straight_monthly"/>
+                            <label for="straight_monthly" string="Straight Monthly"/>
+                            <br/>
+                            <field name="allow_custom_adv"/>
+                            <label for="allow_custom_adv" string="Allow Discount for Adv."/>
+                            <br/>
+                            <!--<label for="adv_less"/>-->
+                            <div attrs="{'invisible': [('allow_custom_adv', '=', False)]}">
+                                <field name="adv_less" class="oe_inline" string="&#009;"/>
+                                <label string="%" class="oe_inline"/>
+                            </div>
+                            <br/>
+                            <field name="allow_split_adv"/>
+                            <label for="allow_split_adv" string="Allow Split Adv."/>
+                            <!--<label for="adv_less"/>-->
+                            <br/>
+                            <div attrs="{'invisible': [('allow_split_adv', '=', False)]}">
+                                <field name="split_adv" class="oe_inline" string="&#009;"/>
+                                <label string="&#160;- splits" class="oe_inline"/>
+                            </div>
+                        </div>
+                        <br/>
+                        <field name="deferred_line_ids">
+                            <tree editable="bottom">
+                                <!--<field name="straight_monthly" invisible="1"/>-->
+                                <field name="product_category_id"/>
+                                <field name="adv_payment_type"/>
+                                <field name="adv_payment"/>
+                                <field name="interest_rate"/>
+                            </tree>
+                        </field>
+
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="loan_deferred_term_action_view" model="ir.actions.act_window">
+            <field name="name">Deferred Term</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">loan.deferred.term</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+
+        <menuitem id="DEFERRED_TERM_CONFIG_MENU" name="Payment Terms" parent="BRDC_CONFIG_CATEGORY" action="loan_deferred_term_action_view" sequence=""/>
+
+    </data>
+</odoo>
