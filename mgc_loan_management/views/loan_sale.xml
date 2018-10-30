@@ -28,6 +28,7 @@
 
 							<group>
 								<field name="order_date"/>
+								<field name="currency_id" invisible="1"/>
 								<field name="pricelist_id" options='{"no_open": True, "no_create_edit": 1}'/>
 							</group>
 						</group>
@@ -52,17 +53,30 @@
 									</table>
 								</group>
 								<hr/>
-								<group class="oe_subtotal_footer oe_right" colspan="2" name="sale_total">
-									<field name="amount_untaxed" widget='monetary' options="{'currency_field': 'currency_id'}"/>
-									<field name="amount_tax" widget='monetary' options="{'currency_field': 'currency_id'}"/>
-									<div class="oe_subtotal_footer_separator oe_inline o_td_label">
-										<label for="amount_total" />
-										<button name="button_dummy"
-											states="draft" string="(update)" type="object" class="oe_edit_only oe_link"/>
-									</div>
-									<field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+								<group col="6">
+									<group colspan="2">
+										<field name="adv_term" widget="radio"/>
+										<field name="adv_payment" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+									</group>
+									<group colspan="2">
+										<field name="for_amort_balance" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+										<field name="monthly_amort" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+									</group>
+
+									<group class="oe_subtotal_footer oe_right" name="sale_total">
+										<field name="amount_untaxed" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+										<field name="amount_tax" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+										<div class="oe_subtotal_footer_separator oe_inline o_td_label">
+											<label for="amount_total" />
+											<button name="button_dummy"
+												states="draft" string="(update)" type="object" class="oe_edit_only oe_link"/>
+										</div>
+										<field name="amount_total" nolabel="1" class="oe_subtotal_footer_separator" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+									</group>
 								</group>
+
 								<div class="oe_clear"/>
+
 							</page>
 							<page string="Other Information">
 								<group>

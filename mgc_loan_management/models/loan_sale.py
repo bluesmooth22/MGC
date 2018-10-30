@@ -1,8 +1,27 @@
 from odoo import models, fields, api, _
 
+data = []
+
 class InstallmentSale(models.Model):
 	_name = 'installment.sale'
- 
+	
+	@api.onchange('product_category_id')
+	def _get_deferred_term(self):
+		term_list = []
+		result = {}
+		for order in self:
+			if order.product_category_id:
+				term_line = self.env['loan.deferred.term.line'].search(
+					[('product_category_id', '=', order.product_category_id.id)])
+				for line in term_line:
+					result[line.id] = [(6, 0, line.deferred_id.id)]
+					term_list.append(line.deferred_id.id)
+				result['domain'] = {'purchase_term': [('id', 'in', term_list)]}
+			else:
+				result['domain'] = {'purchase_term': [('id', 'in', [])]}
+		return result
+	
+		
 	name = fields.Char()
 	state = fields.Selection([('draft','Quotation'),
 		('sale','Sale Order'),
@@ -15,12 +34,12 @@ class InstallmentSale(models.Model):
 
 	purchase_type = fields.Selection([('install', 'Installment'),('cash', 'Cash')], default='install')
 	product_type = fields.Selection([('product', 'Product'), ('service', 'Service'), ('plan', 'Plan')], default='product')
-	product_category_id = fields.Many2one('product.category', 'Product Category', domain=[('parent_category', '=', True)])
+	product_category_id = fields.Many2one('product.category', 'Product Category', domain="[('parent_category', '=', True), ('product_type', '=', product_type)]")
 	pricelist_id = fields.Many2one('product.pricelist', string='Pricelist', required=True, readonly=True, states={'draft': [('readonly', False)]})
 	currency_id = fields.Many2one("res.currency", related='pricelist_id.currency_id', string="Currency", readonly=True, required=True)
-
-	purchase_term = fields.Many2one('loan.deferred.term')
-
+	
+	purchase_term = fields.Many2one('loan.deferred.term', domain=[])
+	
 	product_id = fields.Many2one('product.product', required=True, domain="[('type', '=', product_type),('categ_id', '=', product_category_id)]")
 	lot_id = fields.Many2one('stock.production.lot')
 	price_unit = fields.Float(string='Unit Price', track_visibility='always')
@@ -32,6 +51,58 @@ class InstallmentSale(models.Model):
 	amount_tax = fields.Monetary(string='Taxes', store=True, readonly=True, track_visibility='always')
 	amount_total = fields.Monetary(string='Total', store=True, readonly=True, track_visibility='always')
 	
+	adv_term = fields.Selection([('orig', 'Original Adv.'), ('lessed', 'Lessed Adv.'), ('split', 'Deferred Adv.')], default='orig', string='Adv. Payment Term')
+	adv_payment = fields.Float('Advance Payment', compute="_get_amount", store=True, track_visibility='always')
+	for_amort_balance = fields.Float('Balance w/Interest', compute="_get_amount", store=True, track_visibility='always')
+	monthly_amort = fields.Float('Amortization', compute="_get_amount", store=True, track_visibility='always')
+	
+	@api.depends('price_subtotal', 'purchase_term', 'adv_term')
+	def _get_amount(self):
+		payment_adv = None
+		balance = None
+		balance_w_int = None
+		amort = None
+		_adv = None
+		for order in self:
+			term_line = self.env['loan.deferred.term.line'].search(
+				[('product_category_id', '=', order.product_category_id.id),
+				 ('deferred_id', '=', order.purchase_term.id)])
+			if term_line.adv_payment_type == 'perc':
+				_adv = term_line.adv_payment / 100
+				balance = order.price_subtotal - (order.price_subtotal * _adv)
+				if order.adv_term == 'orig':
+					payment_adv = order.price_subtotal * _adv
+				elif order.adv_term == 'lessed' and order.purchase_term.allow_custom_adv:
+					discount = (order.price_subtotal * _adv) * (order.purchase_term.adv_less / 100)
+					# payment_adv = (order.price_subtotal * _adv) - discount
+					payment_adv = (order.price_subtotal * _adv) * (1 - (order.purchase_term.adv_less or 0.0) / 100.0)
+				elif order.adv_term == 'split' and order.purchase_term.allow_split_adv:
+					payment_adv = order.price_subtotal * _adv / order.purchase_term.split_adv
+				else:
+					payment_adv = 0.00
+			else:
+				_adv = term_line.adv_payment
+				balance = order.price_subtotal - _adv
+				if order.adv_term == 'orig':
+					payment_adv = _adv
+				elif order.adv_term == 'lessed' and order.purchase_term.allow_custom_adv:
+					payment_adv = _adv * (1 - (order.purchase_term.adv_less or 0.0) / 100.0)
+				elif order.adv_term == 'split' and order.purchase_term.allow_split_adv:
+					payment_adv = _adv / order.purchase_term.split_adv
+				else:
+					payment_adv = 0.00
+					
+			balance_w_int = balance * (1 + (term_line.interest_rate or 0.0) / 100.0)
+			amort = balance_w_int / order.purchase_term.months
+		
+			# order.adv_payment = payment_adv
+		
+			order.update({
+				'adv_payment': payment_adv,
+				'for_amort_balance': balance_w_int,
+				'monthly_amort': amort,
+			})
+		
 	@api.onchange('partner_id')
 	def _get_default_pricelist(self):
 		for order in self:
@@ -72,6 +143,7 @@ class InstallmentSale(models.Model):
 	def _product_category(self):
 		for order in self:
 			order.product_id = False
+			order.purchase_term = False
 	
 	# @api.multi
 	# @api.onchange('product_type','product_category_id')

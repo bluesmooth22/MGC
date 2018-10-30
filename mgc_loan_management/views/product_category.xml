@@ -9,10 +9,13 @@
             <field name="inherit_id" ref="product.product_category_form_view"/>
             <field name="arch" type="xml">
 
-                <xpath expr="//field[@name='name']" position="after">
+                <xpath expr="//div[@class='oe_title']" position="after">
                     <br/>
                     <field name="parent_category"/>
                     <label for="parent_category" string="Is Parent"/>
+                    <group>
+                        <field name="product_type"/>
+                    </group>
                 </xpath>
 
                 <xpath expr="//group[@name='first']" position="attributes">
