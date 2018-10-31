@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'stock'],
+    'depends': ['base', 'account', 'product', 'stock'],
 
     # always loaded
     'data': [
@@ -28,6 +28,7 @@
         'views/loan_sale.xml',
         'views/product_category.xml',
         'views/loan_deferred_term.xml',
+        'views/account_tax.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

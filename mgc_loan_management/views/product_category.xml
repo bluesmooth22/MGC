@@ -14,12 +14,20 @@
                     <field name="parent_category"/>
                     <label for="parent_category" string="Is Parent"/>
                     <group>
-                        <field name="product_type"/>
+                        <field name="product_type" attrs="{'invisible':[('parent_category', '=', False)]}"/>
                     </group>
+                    <field name="has_pcf" attrs="{'invisible':[('parent_category', '=', True)]}"/>
+                    <label for="has_pcf" string="Deduct PCF?" attrs="{'invisible':[('parent_category', '=', True)]}"/>
+                    <div attrs="{'invisible':[('has_pcf', '=', False)]}">
+                        <field name="pfc_perc" class="oe_inline" string="&#009;"/>
+                        <label string="&#160;%" class="oe_inline"/>
+                    </div>
                 </xpath>
-
                 <xpath expr="//group[@name='first']" position="attributes">
                     <attribute name="attrs">{'invisible':[('parent_category', '=', True)]}</attribute>
+                </xpath>
+                <xpath expr="//field[@name='parent_id']" position="attributes">
+                    <attribute name="domain">[('parent_category', '=', True)]</attribute>
                 </xpath>
 
             </field>

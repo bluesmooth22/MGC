@@ -7,8 +7,15 @@ class ProductCategory(models.Model):
 	product_type = fields.Selection([('product', 'Product'), ('service', 'Service'), ('plan', 'Plan')],
 	                                default='product')
 	
+	has_pcf = fields.Boolean(default=False)
+	pfc_perc = fields.Float()
+	
 	@api.onchange('parent_category')
 	def _parent_category(self):
 		for s in self:
 			s.parent_id = False
+			s.has_pcf = False
+			s.pfc_perc = 0.00
+			
+			
 			

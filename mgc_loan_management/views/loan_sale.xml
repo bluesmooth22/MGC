@@ -40,15 +40,17 @@
 											<td>Product</td>
 											<td>Lot/Vault</td>
 											<td>Unit Price</td>
+											<td>Taxes</td>
 											<td>Discount (%)</td>
 											<td>Subtotal</td>
 										</tr>
 										<tr>
 											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="product_id" options='{"no_open": True, "no_create_edit": 1}'/></td>
 											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="lot_id" options='{"no_open": True, "no_create_edit": 1}'/></td>
-											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_unit"/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_unit" widget='monetary' options="{'currency_field': 'currency_id'}"/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="tax_id" widget="many2many_tags"/></td>
 											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="discount"/></td>
-											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_subtotal"/></td>
+											<td style="border: 1px solid #ddd; border-bottom: none !important;"><field name="price_subtotal" widget='monetary' options="{'currency_field': 'currency_id'}"/></td>
 										</tr>
 									</table>
 								</group>

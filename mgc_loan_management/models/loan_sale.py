@@ -51,17 +51,21 @@ class InstallmentSale(models.Model):
 	amount_tax = fields.Monetary(string='Taxes', store=True, readonly=True, track_visibility='always')
 	amount_total = fields.Monetary(string='Total', store=True, readonly=True, track_visibility='always')
 	
+	tax_id = fields.Many2many('account.tax', string='Taxes',
+	                          domain=['|', ('active', '=', False), ('active', '=', True)])
+	
 	adv_term = fields.Selection([('orig', 'Original Adv.'), ('lessed', 'Lessed Adv.'), ('split', 'Deferred Adv.')], default='orig', string='Adv. Payment Term')
 	adv_payment = fields.Float('Advance Payment', compute="_get_amount", store=True, track_visibility='always')
 	for_amort_balance = fields.Float('Balance w/Interest', compute="_get_amount", store=True, track_visibility='always')
 	monthly_amort = fields.Float('Amortization', compute="_get_amount", store=True, track_visibility='always')
 	
-	@api.depends('price_subtotal', 'purchase_term', 'adv_term')
+	@api.depends('product_id','price_subtotal', 'purchase_term', 'adv_term')
 	def _get_amount(self):
 		payment_adv = None
 		balance = None
 		balance_w_int = None
 		amort = None
+		total = None
 		_adv = None
 		for order in self:
 			term_line = self.env['loan.deferred.term.line'].search(
@@ -93,7 +97,9 @@ class InstallmentSale(models.Model):
 					payment_adv = 0.00
 					
 			balance_w_int = balance * (1 + (term_line.interest_rate or 0.0) / 100.0)
-			amort = balance_w_int / order.purchase_term.months
+			amort = 0.00 if not order.purchase_term else (balance_w_int / order.purchase_term.months)
+			total = payment_adv + balance_w_int
+			
 		
 			# order.adv_payment = payment_adv
 		
@@ -126,6 +132,11 @@ class InstallmentSale(models.Model):
 			else:
 				unit_price = order.product_id.lst_price
 			order.price_unit = unit_price
+			
+	@api.onchange('product_id')
+	def _get_taxes(self):
+		for order in self:
+			order.tax_id = [(6, 0, order.product_id.taxes_id.ids)]
 			
 	@api.onchange('price_unit','discount')
 	def _price_discount(self):
