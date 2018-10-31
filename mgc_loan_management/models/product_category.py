@@ -8,7 +8,7 @@ class ProductCategory(models.Model):
 	                                default='product')
 	
 	has_pcf = fields.Boolean(default=False)
-	pfc_perc = fields.Float()
+	pcf_perc = fields.Float()
 	
 	@api.onchange('parent_category')
 	def _parent_category(self):

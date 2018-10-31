@@ -40,7 +40,7 @@ class InstallmentSale(models.Model):
 	
 	purchase_term = fields.Many2one('loan.deferred.term', domain=[])
 	
-	product_id = fields.Many2one('product.product', required=True, domain="[('type', '=', product_type),('categ_id', '=', product_category_id)]")
+	product_id = fields.Many2one('product.product', required=True, domain="['&', ('type', '=', product_type), '|', ('categ_id.parent_id', '=', product_category_id), ('categ_id', '=', product_category_id)]")
 	lot_id = fields.Many2one('stock.production.lot')
 	price_unit = fields.Float(string='Unit Price', track_visibility='always')
 	discount = fields.Float()
@@ -59,6 +59,8 @@ class InstallmentSale(models.Model):
 	for_amort_balance = fields.Float('Balance w/Interest', compute="_get_amount", store=True, track_visibility='always')
 	monthly_amort = fields.Float('Amortization', compute="_get_amount", store=True, track_visibility='always')
 	
+	pcf = fields.Float(string='PCF', compute="_get_amount", store=True, track_visibility='always')
+	
 	@api.depends('product_id','price_subtotal', 'purchase_term', 'adv_term')
 	def _get_amount(self):
 		payment_adv = None
@@ -67,6 +69,8 @@ class InstallmentSale(models.Model):
 		amort = None
 		total = None
 		_adv = None
+		pcf = None
+		total_adv = None
 		for order in self:
 			term_line = self.env['loan.deferred.term.line'].search(
 				[('product_category_id', '=', order.product_category_id.id),
@@ -76,30 +80,44 @@ class InstallmentSale(models.Model):
 				balance = order.price_subtotal - (order.price_subtotal * _adv)
 				if order.adv_term == 'orig':
 					payment_adv = order.price_subtotal * _adv
+					total_adv = payment_adv
 				elif order.adv_term == 'lessed' and order.purchase_term.allow_custom_adv:
 					discount = (order.price_subtotal * _adv) * (order.purchase_term.adv_less / 100)
 					# payment_adv = (order.price_subtotal * _adv) - discount
 					payment_adv = (order.price_subtotal * _adv) * (1 - (order.purchase_term.adv_less or 0.0) / 100.0)
+					total_adv = payment_adv
 				elif order.adv_term == 'split' and order.purchase_term.allow_split_adv:
 					payment_adv = order.price_subtotal * _adv / order.purchase_term.split_adv
+					total_adv = payment_adv * order.purchase_term.split_adv
 				else:
 					payment_adv = 0.00
+					total_adv = 0.00
 			else:
 				_adv = term_line.adv_payment
 				balance = order.price_subtotal - _adv
 				if order.adv_term == 'orig':
 					payment_adv = _adv
+					total_adv = payment_adv
 				elif order.adv_term == 'lessed' and order.purchase_term.allow_custom_adv:
 					payment_adv = _adv * (1 - (order.purchase_term.adv_less or 0.0) / 100.0)
+					total_adv = payment_adv
 				elif order.adv_term == 'split' and order.purchase_term.allow_split_adv:
 					payment_adv = _adv / order.purchase_term.split_adv
+					total_adv = payment_adv * order.purchase_term.split_adv
 				else:
 					payment_adv = 0.00
-					
+					total_adv = 0.00
+			
 			balance_w_int = balance * (1 + (term_line.interest_rate or 0.0) / 100.0)
 			amort = 0.00 if not order.purchase_term else (balance_w_int / order.purchase_term.months)
-			total = payment_adv + balance_w_int
-			
+			total = total_adv + balance_w_int
+			has_pcf = False
+			if order.product_id.categ_id.has_pcf:
+				has_pcf = True
+				pcf = total * ((order.product_id.categ_id.pcf_perc or 0.0) / 100.0)
+			else:
+				has_pcf = False
+				pcf = 0.0
 		
 			# order.adv_payment = payment_adv
 		
@@ -107,6 +125,7 @@ class InstallmentSale(models.Model):
 				'adv_payment': payment_adv,
 				'for_amort_balance': balance_w_int,
 				'monthly_amort': amort,
+				'pcf': pcf,
 			})
 		
 	@api.onchange('partner_id')

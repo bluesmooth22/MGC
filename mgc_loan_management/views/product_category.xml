@@ -19,7 +19,7 @@
                     <field name="has_pcf" attrs="{'invisible':[('parent_category', '=', True)]}"/>
                     <label for="has_pcf" string="Deduct PCF?" attrs="{'invisible':[('parent_category', '=', True)]}"/>
                     <div attrs="{'invisible':[('has_pcf', '=', False)]}">
-                        <field name="pfc_perc" class="oe_inline" string="&#009;"/>
+                        <field name="pcf_perc" class="oe_inline" string="&#009;"/>
                         <label string="&#160;%" class="oe_inline"/>
                     </div>
                 </xpath>
