@@ -66,9 +66,10 @@
 									</group>
 
 									<group class="oe_subtotal_footer oe_right" name="sale_total">
+										<field name="total_adv" widget='monetary' options="{'currency_field': 'currency_id'}"/>
 										<field name="pcf" widget='monetary' options="{'currency_field': 'currency_id'}"/>
 										<field name="amount_untaxed" widget='monetary' options="{'currency_field': 'currency_id'}"/>
-										<field name="amount_tax" widget='monetary' options="{'currency_field': 'currency_id'}"/>
+										<field name="amount_tax" string="VAT" widget='monetary' options="{'currency_field': 'currency_id'}"/>
 										<div class="oe_subtotal_footer_separator oe_inline o_td_label">
 											<label for="amount_total" />
 											<button name="button_dummy"

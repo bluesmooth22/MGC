@@ -29,6 +29,7 @@
         'views/product_category.xml',
         'views/loan_deferred_term.xml',
         'views/account_tax.xml',
+        # 'static/resources.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

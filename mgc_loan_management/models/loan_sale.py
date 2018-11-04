@@ -47,9 +47,9 @@ class InstallmentSale(models.Model):
 	price_subtotal = fields.Float(string='Subtotal', track_visibility='always', compute="_price_discount")
 	user_id = fields.Many2one('res.users', 'Salesperson', default=lambda self: self.env.user)
 	
-	amount_untaxed = fields.Monetary(string='Untaxed Amount', store=True, readonly=True, track_visibility='always')
-	amount_tax = fields.Monetary(string='Taxes', store=True, readonly=True, track_visibility='always')
-	amount_total = fields.Monetary(string='Total', store=True, readonly=True, track_visibility='always')
+	amount_untaxed = fields.Monetary(string='Untaxed Amount', compute="_get_amount", store=True, track_visibility='always')
+	amount_tax = fields.Monetary(string='Taxes', compute="_get_amount", store=True, track_visibility='always')
+	amount_total = fields.Monetary(string='Total', compute="_get_amount", store=True, track_visibility='always')
 	
 	tax_id = fields.Many2many('account.tax', string='Taxes',
 	                          domain=['|', ('active', '=', False), ('active', '=', True)])
@@ -60,6 +60,7 @@ class InstallmentSale(models.Model):
 	monthly_amort = fields.Float('Amortization', compute="_get_amount", store=True, track_visibility='always')
 	
 	pcf = fields.Float(string='PCF', compute="_get_amount", store=True, track_visibility='always')
+	total_adv = fields.Float(string='DP', compute="_get_amount", store=True, track_visibility='always')
 	
 	@api.depends('product_id','price_subtotal', 'purchase_term', 'adv_term')
 	def _get_amount(self):
@@ -71,6 +72,8 @@ class InstallmentSale(models.Model):
 		_adv = None
 		pcf = None
 		total_adv = None
+		untaxed = None
+		tax = None
 		for order in self:
 			term_line = self.env['loan.deferred.term.line'].search(
 				[('product_category_id', '=', order.product_category_id.id),
@@ -118,6 +121,16 @@ class InstallmentSale(models.Model):
 			else:
 				has_pcf = False
 				pcf = 0.0
+			
+			for taxes in order.tax_id:
+				if taxes.amount_type != 'vat':
+					continue
+				else:
+					print taxes.name
+					self.ensure_one()
+					tax = taxes.amount
+			
+			untaxed = (total - total_adv - pcf) / (1 + (tax or 0.0) / 100.0)
 		
 			# order.adv_payment = payment_adv
 		
@@ -126,6 +139,10 @@ class InstallmentSale(models.Model):
 				'for_amort_balance': balance_w_int,
 				'monthly_amort': amort,
 				'pcf': pcf,
+				'total_adv': total_adv,
+				'amount_untaxed': untaxed,
+				'amount_tax': untaxed * ((tax or 0.0) / 100.0),
+				'amount_total': total,
 			})
 		
 	@api.onchange('partner_id')
